@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>TrimSQL</title>
+    <style type="text/css">
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        textarea {
+            width: 100%;
+            height: 50%;
+        }
+    </style>
+</head>
+<body>
+<textarea id="input" title="Input:"></textarea>
+<textarea id="output" title="Output:"></textarea>
+<script type="text/javascript">
+    var input = document.getElementById("input");
+    var output = document.getElementById("output");
+    input.onkeypress = function () {
+        output.value = input.value
+                .replace(/\s+/gm, " ")
+                .trim()
+                .replace(/\s*([(),;><=+\-*/?])\s*/gm, "$1")
+                .replace(/;/gm, ";\n")
+                .split("\\n");
+    }
+</script>
+</body>
+</html>
