@@ -27,6 +27,7 @@ import java.io.FileNotFoundException;
 
 
 public class Main extends ListActivity {
+    private DatabaseHelper helper;
     private final LoaderManager.LoaderCallbacks<Cursor> callback = new LoaderManager.LoaderCallbacks<Cursor>() {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -35,7 +36,7 @@ public class Main extends ListActivity {
 
                 @Override
                 public Cursor loadInBackground() {
-                    Cursor cursor = ((Notes) getApplication()).query();
+                    Cursor cursor = helper.queryAllRecords();
                     if (cursor != null) {
                         cursor.getCount();
                         cursor.registerContentObserver(mObserver);
@@ -59,6 +60,7 @@ public class Main extends ListActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        helper = DatabaseHelper.getInstance(this);
         getListView().setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
         getListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -81,11 +83,11 @@ public class Main extends ListActivity {
             public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
                     case R.id.item_delete:
-                        SQLiteDatabase database = ((Notes) getApplication()).getWritableDatabase();
+                        SQLiteDatabase database = helper.getWritableDatabase();
                         try {
                             database.beginTransaction();
                             for (long id : getListView().getCheckedItemIds()) {
-                                ((Notes) getApplication()).delete(id);
+                                helper.delete(id);
                             }
                             database.setTransactionSuccessful();
                         } finally {
@@ -100,7 +102,7 @@ public class Main extends ListActivity {
                         }
                         break;
                     case R.id.item_copy:
-                        ((ClipboardManager) getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText(null, ((Notes) getApplication()).peek(getListView().getCheckedItemIds()[0])));
+                        ((ClipboardManager) getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText(null, helper.getContentOfOneRecord(getListView().getCheckedItemIds()[0])));
                         mode.finish();
                         break;
                 }
@@ -117,12 +119,12 @@ public class Main extends ListActivity {
                         mode.setSubtitle(null);
                         break;
                     default:
-                        mode.setSubtitle(getString(R.string.notes_count_subtitle, checkedCount));
+                        mode.setSubtitle(getResources().getQuantityString(R.plurals.notes_count_subtitle, checkedCount, checkedCount));
                         break;
                 }
             }
         });
-        setListAdapter(new Notes.NotesAdapter(this));
+        setListAdapter(new DatabaseHelper.Adapter(this));
         getLoaderManager().initLoader(0, null, callback);
     }
 
@@ -144,7 +146,7 @@ public class Main extends ListActivity {
                         @Override
                         protected Boolean doInBackground(Void... params) {
                             try {
-                                return ((Notes) getApplication()).restore(getApplication().getContentResolver().openInputStream(data.getData()));
+                                return helper.restoreFromJSON(getApplication().getContentResolver().openInputStream(data.getData()));
                             } catch (FileNotFoundException e) {
                                 throw new IllegalStateException(e);
                             }
@@ -166,7 +168,7 @@ public class Main extends ListActivity {
                         @Override
                         protected Boolean doInBackground(Void... params) {
                             try {
-                                return ((Notes) getApplication()).backup(getContentResolver().openOutputStream(data.getData(), "w"));
+                                return helper.dumpAsJSON(getContentResolver().openOutputStream(data.getData(), "w"));
                             } catch (FileNotFoundException e) {
                                 throw new IllegalStateException(e);
                             }

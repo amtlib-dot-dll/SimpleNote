@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SimpleNote</string>
+    <string name="add">Add</string>
+    <string name="action_export">Export</string>
+    <string name="action_import">Import</string>
+    <string name="delete">Delete</string>
+    <string name="export_success">Export successful</string>
+    <string name="export_fail">Export fail</string>
+    <string name="import_from">Import from</string>
+    <string name="import_success">Import successful</string>
+    <string name="import_fail">Import fail</string>
+    <string name="select_notes">Select notes</string>
+    <string name="select_accounts">Select accounts</string>
+    <plurals name="notes_count_subtitle">
+        <item quantity="one">%1$s note is selected</item>
+        <item quantity="other">%1$s notes are selected</item>
+    </plurals>
+    <string name="after_copy">Copied to clipboard</string>
+    <string name="hint_usage">Usage</string>
+    <string name="hint_amount">Amount</string>
+    <string name="treat_all_as_link">Treat all text as link and open</string>
+    <string name="linkify">Linkify</string>
+</resources>
