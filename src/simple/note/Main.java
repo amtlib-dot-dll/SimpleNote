@@ -2,26 +2,15 @@ package simple.note;
 
 import android.app.ListActivity;
 import android.app.LoaderManager;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.CursorLoader;
-import android.content.Intent;
-import android.content.Loader;
+import android.content.*;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.text.format.DateUtils;
-import android.view.ActionMode;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.CursorAdapter;
-import android.widget.ListView;
-import android.widget.Toast;
+import android.view.*;
+import android.widget.*;
 
 import java.io.FileNotFoundException;
 
@@ -30,13 +19,18 @@ public class Main extends ListActivity {
     private DatabaseHelper helper;
     private final LoaderManager.LoaderCallbacks<Cursor> callback = new LoaderManager.LoaderCallbacks<Cursor>() {
         @Override
-        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        public Loader<Cursor> onCreateLoader(int id, final Bundle args) {
             return new CursorLoader(Main.this) {
                 final ForceLoadContentObserver mObserver = new ForceLoadContentObserver();
 
                 @Override
                 public Cursor loadInBackground() {
-                    Cursor cursor = helper.queryAllRecords();
+                    Cursor cursor;
+                    if (args != null && args.containsKey("query")) {
+                        cursor = helper.search(args.getString("query"));
+                    } else {
+                        cursor = helper.queryAllRecords();
+                    }
                     if (cursor != null) {
                         cursor.getCount();
                         cursor.registerContentObserver(mObserver);
@@ -56,6 +50,7 @@ public class Main extends ListActivity {
             ((CursorAdapter) getListAdapter()).swapCursor(null);
         }
     };
+    private MenuItem search;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,6 +126,37 @@ public class Main extends ListActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
+        search = menu.findItem(R.id.search);
+        search.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                getLoaderManager().restartLoader(0, null, callback);
+                return true;
+            }
+        });
+        ((SearchView) search.getActionView()).setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.length() == 0) {
+                    getLoaderManager().restartLoader(0, null, callback);
+                } else {
+                    Bundle args = new Bundle(1);
+                    args.putString("query", newText);
+                    getLoaderManager().restartLoader(0, args, callback);
+                }
+                return true;
+            }
+        });
         return true;
     }
 
@@ -139,7 +165,13 @@ public class Main extends ListActivity {
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case 0:
-                    getLoaderManager().restartLoader(0, null, callback);
+                    if (search.isActionViewExpanded()) {
+                        Bundle args = new Bundle(1);
+                        args.putString("query", ((SearchView) search.getActionView()).getQuery().toString());
+                        getLoaderManager().restartLoader(0, args, callback);
+                    } else {
+                        getLoaderManager().restartLoader(0, null, callback);
+                    }
                     break;
                 case 1:
                     new AsyncTask<Void, Void, Boolean>() {

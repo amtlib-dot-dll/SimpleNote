@@ -203,6 +203,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "  DESC;", null);
     }
 
+    public Cursor search(String query) {
+        return getReadableDatabase().rawQuery("SELECT\n" +
+                "  _id,\n" +
+                "  CREATION_TIME_UTC,\n" +
+                "  LAST_WRITE_TIME_UTC,\n" +
+                "  DATA.CONTENT\n" +
+                "FROM DATA, [INDEX]\n" +
+                "WHERE DATA._id = [INDEX].ROWID AND [INDEX].CONTENT MATCH ?\n" +
+                "ORDER BY LAST_WRITE_TIME_UTC\n" +
+                "  DESC;", new String[]{query + '*'});
+    }
+
     public static class Adapter extends CursorAdapter {
         LayoutInflater inflater;
 
