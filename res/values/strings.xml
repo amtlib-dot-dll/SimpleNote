@@ -21,4 +21,5 @@
     <string name="hint_amount">Amount</string>
     <string name="treat_all_as_link">Treat all text as link and open</string>
     <string name="linkify">Linkify</string>
+    <string name="search">Search</string>
 </resources>
